@@ -12,6 +12,7 @@ const {
   logItemCompletion,
   logConclusion,
   logError,
+  splitName
 } = require('./helpers');
 const {
   requireOptional,
@@ -41,32 +42,48 @@ program
     config.lang
   )
   .option(
+      '-s, --style <language>',
+      'Which language to use in Css (default: "SCSS")',
+      /^(styl|scss)$/i,
+      config.style
+  )
+  .option(
     '-d, --dir <pathToDirectory>',
     'Path to the "components" directory (default: "src/components")',
     config.dir
   )
+  // todo: index file is temporary disabled - need to add option in config to switch it
+  // .action(
+  //     '-i, --index <indexFile>',
+  //     'Disable/Enable index file',
+  //     config.index
+  // )
   .parse(process.argv);
 
 const [componentName] = program.args;
 
 const options = program.opts();
 
-const fileExtension = options.lang === 'js' ? 'js' : 'tsx';
-const indexExtension = options.lang === 'js' ? 'js' : 'ts';
+const fileExtension = options.lang === 'js' ? 'js' : 'jsx';
+// const indexExtension = options.lang === 'js' ? 'js' : 'ts';
+const styleExtension = options.style === 'stylus' ? 'styl' : 'scss';
 
 // Find the path to the selected template file.
 const templatePath = `./templates/${options.lang}.js`;
 
 // Get all of our file paths worked out, for the user's project.
-const componentDir = `${options.dir}/${componentName}`;
+const componentDir = `${options.dir}/${splitName(componentName, '_')}`;
 const filePath = `${componentDir}/${componentName}.${fileExtension}`;
-const indexPath = `${componentDir}/index.${indexExtension}`;
+// const indexPath = `${componentDir}/index.${indexExtension}`;
+const stylePath = `${componentDir}/${splitName(componentName, '-')}.${styleExtension}`;
 
 // Our index template is super straightforward, so we'll just inline it for now.
-const indexTemplate = prettify(`\
-export * from './${componentName}';
-export { default } from './${componentName}';
-`);
+// const indexTemplate = prettify(`\
+// export * from './${componentName}';
+// export { default } from './${componentName}';
+// `);
+
+const styleTemplate = ``;
 
 logIntro({
   name: componentName,
@@ -107,16 +124,20 @@ mkDirPromise(componentDir)
     template.replace(/COMPONENT_NAME/g, componentName)
   )
   .then((template) =>
+    // Replace our placeholders with real data (so far, just the component name)
+    template.replace(/STYLE_NAME/g, splitName(componentName, '-'))
+  )
+  .then((template) =>
     // Format it using prettier, to ensure style consistency, and write to file.
-    writeFilePromise(filePath, prettify(template))
+    writeFilePromise(filePath, template)
+    //writeFilePromise(filePath, prettify(template))
   )
   .then((template) => {
     logItemCompletion('Component built and saved to disk.');
     return template;
   })
   .then((template) =>
-    // We also need the `index.js` file, which allows easy importing.
-    writeFilePromise(indexPath, prettify(indexTemplate))
+    writeFilePromise(stylePath, styleTemplate)
   )
   .then((template) => {
     logItemCompletion('Index file built and saved to disk.');

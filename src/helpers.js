@@ -72,6 +72,24 @@ module.exports.createParentDirectoryIfNecessary = async (dir) => {
   }
 };
 
+module.exports.splitName = (component, splitter) => {
+  const result = component.split('')
+
+  component.split('').map((symbol, index) => {
+    const isUpper = symbol.toUpperCase() === symbol
+    const isFirst = index === 0
+
+    if (isUpper) {
+      result[index] = isFirst ? symbol.toLowerCase() : `${splitter}${symbol.toLowerCase()}`
+      return
+    }
+
+    result[index] = symbol
+  })
+
+  return result.join('')
+};
+
 // Emit a message confirming the creation of the component
 const colors = {
   red: [216, 16, 16],
@@ -85,10 +103,11 @@ const colors = {
 const langNames = {
   js: 'JavaScript',
   ts: 'TypeScript',
+  jsx: 'JSX',
 };
 
 const logComponentLang = (selected) =>
-  ['js', 'ts']
+  ['js', 'ts', 'jsx']
     .map((option) =>
       option === selected
         ? `${chalk.bold.rgb(...colors.blue)(langNames[option])}`
