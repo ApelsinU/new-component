@@ -33,6 +33,8 @@ module.exports.getConfig = () => {
   const defaults = {
     lang: 'js',
     dir: 'src/components',
+    dirNameStyle: 'custom', // pascalCase | camelCase | snakeCase | kebabCase
+    turkish: false
   };
 
   const globalOverrides = requireOptional(
@@ -72,7 +74,7 @@ module.exports.createParentDirectoryIfNecessary = async (dir) => {
   }
 };
 
-module.exports.splitName = (component, splitter) => {
+function splitName(component, splitter) {
   const result = component.split('')
 
   component.split('').map((symbol, index) => {
@@ -88,6 +90,44 @@ module.exports.splitName = (component, splitter) => {
   })
 
   return result.join('')
+}
+
+function pascalCase(component) {
+  const result = component.split('')
+
+  component.split('').map((symbol, index) => {
+    const isFirst = index === 0
+      result[index] = isFirst ? symbol.toUpperCase() : symbol
+  })
+
+  return result.join('')
+}
+
+function camelCase(component) {
+  const result = component.split('')
+
+  component.split('').map((symbol, index) => {
+    const isFirst = index === 0
+    result[index] = isFirst ? symbol.toLowerCase() : symbol
+  })
+
+  return result.join('')
+}
+
+module.exports.splitNameByStyle = (component, splitter) => {
+  switch (splitter) {
+    case 'pascalCase':
+      return pascalCase(component)
+    case 'camelCase':
+      return camelCase(component)
+    case 'snakeCase':
+      return splitName(component, '_')
+    case 'kebabCase':
+      return splitName(component, '-')
+    case 'custom':
+    default:
+      return component
+  }
 };
 
 // Emit a message confirming the creation of the component
@@ -103,11 +143,12 @@ const colors = {
 const langNames = {
   js: 'JavaScript',
   ts: 'TypeScript',
+  txs: 'TSX',
   jsx: 'JSX',
 };
 
 const logComponentLang = (selected) =>
-  ['js', 'ts', 'jsx']
+  ['js', 'ts', 'jsx', 'tsx']
     .map((option) =>
       option === selected
         ? `${chalk.bold.rgb(...colors.blue)(langNames[option])}`

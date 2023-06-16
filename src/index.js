@@ -12,7 +12,7 @@ const {
   logItemCompletion,
   logConclusion,
   logError,
-  splitName
+  splitNameByStyle
 } = require('./helpers');
 const {
   requireOptional,
@@ -38,7 +38,7 @@ program
   .option(
     '-l, --lang <language>',
     'Which language to use (default: "js")',
-    /^(js|ts)$/i,
+    /^(js|ts|jsx|tsx)$/i,
     config.lang
   )
   .option(
@@ -52,6 +52,16 @@ program
     'Path to the "components" directory (default: "src/components")',
     config.dir
   )
+  .option(
+    '-dns, --dir-name-style <styleOfDirectoryName>',
+    'Style of the "components" directory name (default: "upperCamelCase")',
+    config.dirNameStyle
+  )
+  .option(
+    '-tr, --turkish <turkishProjectFlag>',
+    'Turkish project flag',
+    config.turkish
+  )
   // todo: index file is temporary disabled - need to add option in config to switch it
   // .action(
   //     '-i, --index <indexFile>',
@@ -64,18 +74,19 @@ const [componentName] = program.args;
 
 const options = program.opts();
 
-const fileExtension = options.lang === 'js' ? 'js' : 'jsx';
+const fileExtension = options.lang // 'js' | 'ts | 'jsx' | 'tsx' ;
+
 // const indexExtension = options.lang === 'js' ? 'js' : 'ts';
-const styleExtension = options.style === 'stylus' ? 'styl' : 'scss';
+const styleExtension = options.style // 'styl' | 'scss';
 
 // Find the path to the selected template file.
 const templatePath = `./templates/${options.lang}.js`;
 
 // Get all of our file paths worked out, for the user's project.
-const componentDir = `${options.dir}/${splitName(componentName, '_')}`;
+const componentDir = `${options.dir}/${splitNameByStyle(componentName, config.dirNameStyle)}`;
 const filePath = `${componentDir}/${componentName}.${fileExtension}`;
 // const indexPath = `${componentDir}/index.${indexExtension}`;
-const stylePath = `${componentDir}/${splitName(componentName, '-')}.${styleExtension}`;
+const stylePath = `${componentDir}/${splitNameByStyle(componentName, 'kebabCase')}.${styleExtension}`;
 
 // Our index template is super straightforward, so we'll just inline it for now.
 // const indexTemplate = prettify(`\
@@ -125,7 +136,15 @@ mkDirPromise(componentDir)
   )
   .then((template) =>
     // Replace our placeholders with real data (so far, just the component name)
-    template.replace(/STYLE_NAME/g, splitName(componentName, '-'))
+    template.replace(/STYLE_NAME/g, splitNameByStyle(componentName, 'kebabCase'))
+  )
+  .then((template) =>
+    // Replace our placeholders with real data (so far, just the component name)
+    template.replace(/STYLE_EXT/g, config.style)
+  )
+  .then((template) =>
+    // Replace our placeholders with real data (so far, just the component name)
+    template.replace(/CLASS_NAME/g, config.turkish ? 'styleName' : 'className')
   )
   .then((template) =>
     // Format it using prettier, to ensure style consistency, and write to file.
