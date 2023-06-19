@@ -28,24 +28,25 @@ const AFFIRMATIONS = require('./affirmations');
 // is provided.
 module.exports.getConfig = () => {
   const home = os.homedir();
-  const currentPath = process.cwd();
+  // const currentPath = process.cwd();
 
   const defaults = {
     lang: 'js',
     dir: 'src/components',
     dirNameStyle: 'custom', // pascalCase | camelCase | snakeCase | kebabCase
-    turkish: false
+    cssClassesName: 'className', // className | styleName
+    cssModule: false
   };
 
   const globalOverrides = requireOptional(
     `/${home}/.new-component-config.json`
   );
 
-  const localOverrides = requireOptional(
-    `/${currentPath}/.new-component-config.json`
-  );
+  // const localOverrides = requireOptional(
+  //   `/${currentPath}/.new-component-config.json`
+  // );
 
-  return Object.assign({}, defaults, globalOverrides, localOverrides);
+  return Object.assign({}, defaults, globalOverrides);
 };
 
 module.exports.buildPrettifier = () => {

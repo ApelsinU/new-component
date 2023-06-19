@@ -48,6 +48,12 @@ program
       config.style
   )
   .option(
+      '-cm, --css-module <cssModule>',
+      'Is css module enabled',
+      /^(true|false)$/i,
+      config.cssModule
+  )
+  .option(
     '-d, --dir <pathToDirectory>',
     'Path to the "components" directory (default: "src/components")',
     config.dir
@@ -58,9 +64,9 @@ program
     config.dirNameStyle
   )
   .option(
-    '-tr, --turkish <turkishProjectFlag>',
-    'Turkish project flag',
-    config.turkish
+    '-ccn, --css-classes-name <cssClassesName>',
+    'Config how to write classes in jsx/html : className or styleName (default: "className")',
+    config.cssClassesName
   )
   // todo: index file is temporary disabled - need to add option in config to switch it
   // .action(
@@ -86,7 +92,8 @@ const templatePath = `./templates/${options.lang}.js`;
 const componentDir = `${options.dir}/${splitNameByStyle(componentName, config.dirNameStyle)}`;
 const filePath = `${componentDir}/${componentName}.${fileExtension}`;
 // const indexPath = `${componentDir}/index.${indexExtension}`;
-const stylePath = `${componentDir}/${splitNameByStyle(componentName, 'kebabCase')}.${styleExtension}`;
+const cssModulePrefix = config.cssModule ? 'module.' : ''
+const stylePath = `${componentDir}/${splitNameByStyle(componentName, 'kebabCase')}.${cssModulePrefix}${styleExtension}`;
 
 // Our index template is super straightforward, so we'll just inline it for now.
 // const indexTemplate = prettify(`\
@@ -140,11 +147,11 @@ mkDirPromise(componentDir)
   )
   .then((template) =>
     // Replace our placeholders with real data (so far, just the component name)
-    template.replace(/STYLE_EXT/g, config.style)
+    template.replace(/STYLE_EXT/g, cssModulePrefix + config.style)
   )
   .then((template) =>
     // Replace our placeholders with real data (so far, just the component name)
-    template.replace(/CLASS_NAME/g, config.turkish ? 'styleName' : 'className')
+    template.replace(/CLASS_NAME/g, config.cssClassesName)
   )
   .then((template) =>
     // Format it using prettier, to ensure style consistency, and write to file.
